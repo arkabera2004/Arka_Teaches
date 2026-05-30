@@ -95,13 +95,27 @@ def modify_user(
     updated_user: UserUpdate,
     db: Session = Depends(get_db)
 ):
+    try:
 
-    user = update_user(db, user_id, updated_user)
-
-    if not user:
-        raise HTTPException(
-            status_code=404,
-            detail="User not found"
+        user = update_user(
+            db,
+            user_id,
+            updated_user
         )
 
-    return user    
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+
+        return user
+
+    except IntegrityError:
+
+        db.rollback()
+
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
